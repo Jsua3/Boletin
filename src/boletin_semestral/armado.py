@@ -15,7 +15,7 @@ from boletin_semestral.edicion import ErrorEdicion, cargar
 from boletin_semestral.fotos import pequenas, reducir
 from boletin_semestral.modelo import Estado, Pendiente, fotos_nombradas, pendientes
 from boletin_semestral.pdf import ResultadoPdf, generar_pdf
-from boletin_semestral.render import Modo, copiar_estaticos, renderizar
+from boletin_semestral.render import Modo, copiar_estaticos, nombre_pdf, renderizar
 
 GeneradorPdf = Callable[[Path, Path], ResultadoPdf]
 
@@ -47,11 +47,10 @@ def armar(carpeta: Path, salida: Path, generar: GeneradorPdf | None = None) -> R
             raise ErrorEdicion(f"La edición está aprobada pero tiene pendientes:\n{lista}")
         destino = carpeta / "publicada"
         modo = Modo.FINAL
-        nombre_pdf = f"boletin-vol-{edicion.volumen}.pdf"
     else:
         destino = Path(salida) / edicion.semestre
         modo = Modo.BORRADOR
-        nombre_pdf = f"boletin-vol-{edicion.volumen}-borrador.pdf"
+    archivo_pdf = nombre_pdf(edicion, modo)
 
     # Se arma desde cero en una carpeta aparte y solo se pone en su sitio si todo salió
     # bien: si falla el PDF, no queda una `publicada/` a medias que el sitio publique.
@@ -64,7 +63,7 @@ def armar(carpeta: Path, salida: Path, generar: GeneradorPdf | None = None) -> R
         for nombre in nombradas:
             shutil.copy2(carpeta_fotos / nombre, temporal / "fotos" / nombre)
         # Se busca al llamar, no como valor por defecto, para que las pruebas puedan reemplazarlo.
-        resultado_pdf = (generar or generar_pdf)(temporal / "index.html", temporal / nombre_pdf)
+        resultado_pdf = (generar or generar_pdf)(temporal / "index.html", temporal / archivo_pdf)
     except BaseException:
         _borrar_sin_fallar(temporal)
         raise
@@ -72,7 +71,7 @@ def armar(carpeta: Path, salida: Path, generar: GeneradorPdf | None = None) -> R
 
     return Resultado(
         destino=destino,
-        pdf=destino / nombre_pdf,
+        pdf=destino / archivo_pdf,
         pendientes=faltan,
         largas=resultado_pdf.largas,
         reducidas=reducidas,

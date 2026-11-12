@@ -8,6 +8,7 @@ import re
 import shutil
 from enum import StrEnum
 from pathlib import Path
+from typing import NamedTuple
 from urllib.parse import parse_qs, urlparse
 
 import segno
@@ -28,6 +29,29 @@ _NEGRITA = re.compile(r"\*\*([^*\n]+)\*\*")
 class Modo(StrEnum):
     BORRADOR = "borrador"
     FINAL = "final"
+
+
+class Parte(NamedTuple):
+    """Una parte del boletín en el índice: su ancla, su número y su nombre."""
+
+    id: str
+    num: str
+    nombre: str
+
+
+def partes(edicion: Edicion) -> list[Parte]:
+    """Las partes que lista el índice, en orden: portada, editorial y cada sección."""
+    fijas = [Parte("portada", "", "Portada"), Parte("editorial", "", "Editorial")]
+    return fijas + [
+        Parte(f"seccion-{numero:02d}", f"{numero:02d}", seccion.etiqueta)
+        for numero, seccion in enumerate(edicion.secciones, start=1)
+    ]
+
+
+def nombre_pdf(edicion: Edicion, modo: Modo) -> str:
+    """Cómo se llama el PDF de la edición: lo usan el enlace de la web y `armar`."""
+    sufijo = "-borrador" if modo is Modo.BORRADOR else ""
+    return f"boletin-vol-{edicion.volumen}{sufijo}.pdf"
 
 
 def manuscrita(titulo: str) -> Markup:
@@ -84,18 +108,27 @@ _ENTORNO.filters.update(
 def renderizar(edicion: Edicion, modo: Modo) -> str:
     """El documento HTML completo de la edición."""
     motivos = {p.lugar: p.motivo for p in pendientes(edicion)}
-    secciones = [
-        {
-            "seccion": seccion,
-            "antetitulo": antetitulo(indice, seccion),
-            "pendiente": motivos.get(lugar_de(indice, seccion)),
-            "falta_foto": seccion.tipo in _TIPOS_CON_FOTO and not seccion.nombres_de_fotos(),
-        }
-        for indice, seccion in enumerate(edicion.secciones)
-    ]
+    indice_de_partes = partes(edicion)
+    secciones = []
+    textos = 0
+    for indice, seccion in enumerate(edicion.secciones):
+        textos += seccion.tipo == "texto"
+        secciones.append(
+            {
+                "seccion": seccion,
+                "id": indice_de_partes[indice + 2].id,
+                "antetitulo": antetitulo(indice, seccion),
+                "pendiente": motivos.get(lugar_de(indice, seccion)),
+                "falta_foto": seccion.tipo in _TIPOS_CON_FOTO and not seccion.nombres_de_fotos(),
+                # En pantalla, las secciones de texto alternan el lado de las fotos.
+                "invertida": seccion.tipo == "texto" and textos % 2 == 0,
+            }
+        )
     return _ENTORNO.get_template("boletin.html.j2").render(
         e=edicion,
         secciones=secciones,
+        partes=indice_de_partes,
+        pdf=nombre_pdf(edicion, modo),
         borrador=modo is Modo.BORRADOR,
         pendiente_portada=motivos.get("Portada"),
         pendiente_editorial=motivos.get("Editorial"),
@@ -110,9 +143,9 @@ def renderizar_plantilla(nombre: str, **contexto) -> str:
 
 
 def copiar_estaticos(destino: Path) -> None:
-    """Deja junto al HTML la hoja de estilos, el script, las fuentes y el escudo."""
+    """Deja junto al HTML la hoja de estilos, los scripts, las fuentes y el escudo."""
     destino = Path(destino)
     destino.mkdir(parents=True, exist_ok=True)
-    for nombre in ("estilo.css", "movimiento.js", _LOGO):
+    for nombre in ("estilo.css", "movimiento.js", "riel.js", _LOGO):
         shutil.copyfile(ESTATICOS_SEMESTRAL / nombre, destino / nombre)
     shutil.copytree(ESTATICOS_SEMESTRAL / "fuentes", destino / "fuentes", dirs_exist_ok=True)
