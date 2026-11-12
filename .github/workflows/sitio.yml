@@ -1,0 +1,55 @@
+name: Publicar sitio
+
+# Publica en GitHub Pages las ediciones aprobadas (datos/semestral/*/publicada/).
+# No genera PDFs ni instala Chromium: cada edición aprobada ya viene armada desde
+# el computador del monitor; aquí solo se copian y se arma el índice.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/boletin_semestral/**"
+      - "datos/semestral/**"
+      - ".github/workflows/sitio.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync
+
+      - name: Construir el sitio desde las ediciones aprobadas
+        run: uv run python -m boletin_semestral.sitio
+
+      - name: Preparar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir el sitio
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: sitio
+
+      - name: Desplegar el sitio
+        id: despliegue
+        uses: actions/deploy-pages@v4

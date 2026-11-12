@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.idea/
+.claude/
+.superpowers/
+
+# Vista previa del boletín (se regenera con `semestral armar`) y sitio armado localmente
+salida/
+sitio/
