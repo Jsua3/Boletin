@@ -1,0 +1,26 @@
+{# La barra superior. Con partes y pdf es la del boletín; sin ellos, la del índice del sitio. #}
+<header class="cabecera solo-pantalla">
+{% if partes %}
+  <a class="cabecera__marca" href="#portada">
+{% else %}
+  <span class="cabecera__marca">
+{% endif %}
+    <img src="logo-humboldt.png" alt="">
+    <span class="cabecera__titulo">Proyección <em class="manuscrita">Social</em></span>
+{% if volumen %}
+    <span class="cabecera__vol">{{ volumen }}</span>
+{% endif %}
+{% if partes %}
+  </a>
+  <p class="cabecera__actual"><span class="cabecera__num"></span><span class="cabecera__nombre"></span></p>
+{% else %}
+  </span>
+{% endif %}
+{% if pdf %}
+  <a class="boton cabecera__pdf" href="{{ pdf }}" download>Descargar PDF</a>
+{% endif %}
+{% if partes %}
+  <button class="boton cabecera__secciones" type="button">Secciones</button>
+  <span class="cabecera__avance" aria-hidden="true"><i></i></span>
+{% endif %}
+</header>

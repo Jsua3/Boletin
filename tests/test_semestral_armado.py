@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from conftest import foto_jpg
+from selectolax.lexbor import LexborHTMLParser as HTMLParser
 
 from boletin_semestral import armado
 from boletin_semestral.armado import armar
@@ -195,3 +196,19 @@ def test_cli_nueva(capsys, tmp_path):
     assert codigo == 0
     assert (base / "2026-2" / "edicion.toml").is_file()
     assert "2026-2" in capsys.readouterr().out
+
+
+def _enlace_al_pdf(destino: Path) -> str:
+    html = HTMLParser((destino / "index.html").read_text(encoding="utf-8"))
+    return html.css_first("a.cabecera__pdf").attributes["href"]
+
+
+def test_el_pdf_se_llama_como_dice_el_enlace(carpeta_edicion, tmp_path):
+    borrador = armar(carpeta_edicion, tmp_path / "salida", generar=generar_falso)
+    assert _enlace_al_pdf(borrador.destino) == borrador.pdf.name
+    assert (borrador.destino / "riel.js").is_file()
+
+    _aprobar(carpeta_edicion)
+    final = armar(carpeta_edicion, tmp_path / "salida", generar=generar_falso)
+    assert _enlace_al_pdf(final.destino) == final.pdf.name == "boletin-vol-8.pdf"
+    assert (final.destino / "riel.js").is_file()

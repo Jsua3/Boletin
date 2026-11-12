@@ -1,6 +1,7 @@
 """La sección /semestral/ del sitio: solo ediciones aprobadas, la última destacada y el archivo."""
 
 from conftest import edicion_publicada
+from selectolax.lexbor import LexborHTMLParser as HTMLParser
 
 from boletin_semestral.sitio import anteriores, main, publicadas, publicar
 
@@ -108,3 +109,17 @@ def test_el_indice_no_enlaza_fuera_del_sitio(tmp_path):
     publicar(base, tmp_path / "sitio")
 
     assert "../index.html" not in (tmp_path / "sitio" / "index.html").read_text("utf-8")
+
+
+def test_el_indice_del_sitio_lleva_la_cabecera(tmp_path):
+    base = tmp_path / "semestral"
+    edicion_publicada(base, "2026-2", 8)
+    destino = tmp_path / "sitio" / "semestral"
+
+    publicar(base, destino)
+
+    indice = HTMLParser((destino / "index.html").read_text(encoding="utf-8"))
+    assert indice.css_first(".cabecera .cabecera__titulo") is not None
+    assert indice.css_first(".riel") is None
+    assert indice.css_first(".hoja") is None
+    assert indice.css_first('script[src="riel.js"]') is None

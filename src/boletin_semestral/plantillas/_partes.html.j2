@@ -1,0 +1,8 @@
+{# El índice del boletín: un enlace por cada parte. Lo usan el riel y la hoja de secciones. #}
+{% macro lista(partes, clase) %}
+<ol class="{{ clase }}">
+{% for parte in partes %}
+  <li><a href="#{{ parte.id }}" data-num="{{ parte.num }}">{{ parte.nombre }}</a></li>
+{% endfor %}
+</ol>
+{% endmacro %}

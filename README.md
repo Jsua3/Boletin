@@ -53,13 +53,19 @@ boletín; la Coordinación responde por la autorización de uso, como en las edi
 ## Desarrollo
 
 ```bash
-uv run pytest            # las pruebas de PDF se saltan si no está Chromium
+uv run pytest            # las pruebas de PDF y de navegador se saltan si no está Chromium
 uv run ruff check . && uv run ruff format --check .
 ```
 
 - Diseño: `docs/superpowers/specs/2026-11-11-boletin-semestral-design.md`
 - Plan de implementación: `docs/superpowers/plans/2026-11-11-boletin-semestral.md`
+- Web responsiva (riel de secciones, cabecera y hoja): diseño en
+  `docs/superpowers/specs/2026-11-11-web-responsiva-design.md` y plan en
+  `docs/superpowers/plans/2026-11-12-web-responsiva.md`
 - Análisis del Vol. 7: `docs/02-analisis-boletin-anterior.md`
+
+Las pruebas de navegador (`tests/test_semestral_web.py`) usan el Chromium de Playwright. Si no
+está instalado, la variable `BOLETIN_CHROMIUM` puede apuntar a otro ejecutable de Chromium.
 
 Este programa nació en `Jsua3/proy_social_proyectos`, junto al boletín de empleos, y se mudó aquí el
 12 de noviembre de 2026.

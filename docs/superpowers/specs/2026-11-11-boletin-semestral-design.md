@@ -15,6 +15,10 @@ de implementación
 > dos flujos del §9: aquí hay un solo flujo, `sitio.yml`, que publica `sitio/` con el índice en la
 > raíz. El PR original (Jsua3/proy_social_proyectos#10) se cerró sin integrar.
 
+> **Cambio posterior (web responsiva):** el apartado «Web» del §8, que fijaba una sola columna de
+> unos 760 px, queda reemplazado por `docs/superpowers/specs/2026-11-11-web-responsiva-design.md`.
+> El PDF y el resto de este diseño no cambian.
+
 ---
 
 ## 1. Propósito

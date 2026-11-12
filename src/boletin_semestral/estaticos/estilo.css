@@ -1,6 +1,6 @@
 /* Boletín semestral "Proyección Social EN ACCIÓN" — dirección visual B, "Vol. 7 refinado".
-   La misma hoja sirve en pantalla (una columna que se lee de corrido) y al imprimir
-   (A4, una sección por página), que es como se genera el PDF. */
+   La misma hoja sirve al imprimir (A4, una sección por página: así se genera el PDF) y en
+   pantalla, donde las reglas de `@media screen` reparten el contenido según el ancho. */
 
 @font-face { font-family: "Inter"; font-weight: 400; font-display: swap;
   src: url("fuentes/inter-latin-400-normal.woff2") format("woff2"); }
@@ -228,17 +228,309 @@ figcaption { margin-top: .35rem; font-size: .78rem; color: var(--texto-suave); }
   .con-movimiento .cifra { opacity: 1; transform: none; transition: none; }
 }
 
-@media (max-width: 600px) {
-  .pagina { padding: 30px 22px 34px; }
-  .portada__cuerpo { padding: 24px 22px 18px; }
-  .portada__pie { margin: 0 22px; }
-  .contraportada__cuerpo { padding: 30px 22px 34px; }
-  .titulo { font-size: 1.7rem; }
-  .marca__pro { font-size: 2.7rem; }
-  .marca__soc { font-size: 2.6rem; }
-  .proyecto { grid-template-columns: 84px 1fr; gap: 12px; }
-  .proyecto img, .proyecto__sin-foto { width: 84px; height: 84px; }
-  .cifra__valor { font-size: 2.4rem; }
+/* ==========================================================================
+   En pantalla
+   Todo lo que sigue va dentro de `@media screen`: el PDF se imprime con las
+   reglas de arriba y con el bloque `@media print` del final, que no se tocan.
+   Tres tamaños: celular (menos de 700 px), tableta (700 a 1099) y computador.
+   ========================================================================== */
+@media screen {
+  :root {
+    --margen: 20px;
+    --alto-cabecera: 63px;
+    --ancho-riel: 264px;
+    --franja: #f3f6fa;
+  }
+  body { background: var(--papel); }
+
+  /* Franjas a todo el ancho en lugar de hojas apiladas. */
+  .boletin { max-width: none; margin: 0; padding: 0; }
+  .pagina {
+    margin: 0; border-radius: 0; box-shadow: none;
+    padding: 44px max(var(--margen), calc((100% - 1040px) / 2));
+  }
+  .seccion:nth-of-type(odd) { background: var(--franja); }
+  .cuerpo { max-width: 70ch; }
+
+  /* Ningún texto baja de 12 px. */
+  .antetitulo, .proyecto__meta, .pendiente__etiqueta { font-size: .75rem; }
+  figcaption { font-size: .8125rem; }
+
+  .portada, .contraportada { padding: 0; }
+  .portada__cuerpo { container-type: inline-size; padding: 28px var(--margen) 20px; }
+  .portada__pie { margin: 0 var(--margen); }
+  /* El título de la portada crece con su columna y nunca se sale de ella. */
+  .portada .marca__pro { font-size: clamp(2.6rem, 19cqw, 5.4rem); }
+  .portada .marca__soc { font-size: clamp(2.5rem, 18cqw, 5.2rem); }
+  .contraportada__cuerpo { padding: 48px max(var(--margen), calc((100% - 1040px) / 2)) 52px; }
+  .contraportada__foto { aspect-ratio: auto; max-height: 50vh; }
+}
+
+/* ---------- Celular ---------- */
+@media screen and (max-width: 699px) {
+  .titulo { font-size: 1.875rem; }
+
+  /* Una cifra por fila: el número a la izquierda y su texto a la derecha. */
+  .cifras { grid-template-columns: 1fr; }
+  .cifras .cifra {
+    display: grid; grid-template-columns: minmax(5.5rem, max-content) 1fr; gap: 14px;
+    align-items: center; padding: 16px 0; border-right: 0;
+  }
+  .cifra__valor { font-size: 2.6rem; }
+  .cifra__texto { margin-top: 0; }
+  .franja { aspect-ratio: 16 / 9; }
+
+  .proyecto { grid-template-columns: 1fr; gap: 12px; padding: 22px 0; }
+  .proyecto img, .proyecto__sin-foto { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+
+  /* Las fotos secundarias se deslizan a los lados; la segunda asoma para que se note. */
+  .fotos-par {
+    display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+    margin: 14px calc(-1 * var(--margen)) 0; padding: 0 var(--margen) 6px; scrollbar-width: none;
+  }
+  .fotos-par::-webkit-scrollbar { display: none; }
+  .fotos-par figure { flex: 0 0 80%; scroll-snap-align: center; }
+  .fotos-par figure:only-child { flex-basis: 100%; }
+}
+
+/* ---------- Tableta y computador ---------- */
+@media screen and (min-width: 700px) {
+  :root { --margen: 32px; }
+  .seccion, .editorial { padding-block: 64px; }
+  .titulo { font-size: 2.375rem; }
+
+  /* Texto y fotos lado a lado, bajo el encabezado. La fila 4 es la única flexible: así el
+     texto largo no separa la foto principal de las secundarias. */
+  .seccion--texto {
+    display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto auto auto 1fr; column-gap: 48px; align-items: start;
+  }
+  .seccion--texto > .encabezado { grid-column: 1 / -1; grid-row: 1; }
+  .seccion--texto > .pendiente { grid-column: 1 / -1; grid-row: 2; }
+  .seccion--texto > .cuerpo { grid-column: 1; grid-row: 3 / span 2; }
+  .seccion--texto > .foto-principal { grid-column: 2; grid-row: 3; margin-bottom: 0; }
+  .seccion--texto > .fotos-par { grid-column: 2; grid-row: 4; margin-top: 16px; }
+  .seccion--invertida { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+  .seccion--invertida > .cuerpo { grid-column: 2; }
+  .seccion--invertida > .foto-principal, .seccion--invertida > .fotos-par { grid-column: 1; }
+  /* La foto principal va entera: un afiche con texto no se puede recortar. */
+  .seccion--texto .foto-principal img { aspect-ratio: auto; max-height: 560px; }
+  .seccion--texto .fotos-par img { aspect-ratio: 1; }
+  .seccion--texto:not(:has(.foto-principal)) { display: block; }
+
+  /* Fichas de proyecto con la foto arriba. */
+  .proyectos {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 36px 28px; border-top: 0;
+  }
+  .proyectos .proyecto { display: block; padding: 0; border-bottom: 0; }
+  .proyecto img, .proyecto__sin-foto {
+    display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; margin-bottom: 14px;
+  }
+  .proyectos--sin-fotos .proyecto { padding-top: 16px; border-top: 3px solid var(--azul); }
+
+  .videos { grid-template-columns: 1fr 1fr; gap: 28px; }
+}
+
+/* ---------- Computador ---------- */
+@media screen and (min-width: 1100px) {
+  :root { --margen: 48px; --alto-cabecera: 64px; }
+  .seccion, .editorial { padding-block: 80px; }
+  .titulo { font-size: 2.75rem; }
+
+  /* Portada partida: el texto a un lado y la foto al otro, a la altura de la pantalla. */
+  .portada {
+    display: grid; grid-template-columns: 5fr 6fr; grid-template-rows: 1fr auto;
+    height: calc(100vh - var(--alto-cabecera)); height: calc(100dvh - var(--alto-cabecera));
+    min-height: 560px;
+  }
+  .portada__foto { grid-column: 2; grid-row: 1 / span 2; width: 100%; height: 100%; aspect-ratio: auto; }
+  .portada__cuerpo { grid-column: 1; grid-row: 1; align-self: center; padding: 40px 40px 24px var(--margen); }
+  .portada__pie { grid-column: 1; grid-row: 2; margin: 0 40px 0 var(--margen); }
+  .portada:not(:has(.portada__foto)) { grid-template-columns: 1fr; height: auto; min-height: 0; }
+  .portada:not(:has(.portada__foto)) .portada__cuerpo { padding-block: 72px 32px; }
+
+  /* Editorial: el título a la izquierda y el texto a la derecha. */
+  .editorial {
+    display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    grid-template-rows: auto auto auto 1fr; column-gap: 64px; align-items: start;
+  }
+  .editorial > .encabezado { grid-column: 1; grid-row: 1 / -1; }
+  .editorial > .pendiente, .editorial > .cuerpo, .editorial > .firma { grid-column: 2; }
+
+  /* Hasta cuatro cifras por fila, separadas por una línea. */
+  .cifras { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+  .cifras:has(.cifra:nth-child(5)) { grid-template-columns: repeat(4, 1fr); }
+  .cifras .cifra { padding: 26px 24px; border-right: 0; border-left: 1px solid var(--linea); }
+  .cifras .cifra:first-child, .cifras .cifra:nth-child(5) { padding-left: 0; border-left: 0; }
+  .cifra__valor { font-size: 3.6rem; }
+
+  /* Comparativo: los programas en dos columnas. */
+  .seccion--comparativo { display: grid; grid-template-columns: 1fr 1fr; column-gap: 56px; align-items: start; }
+  .seccion--comparativo > .encabezado,
+  .seccion--comparativo > .pendiente,
+  .seccion--comparativo > .leyenda { grid-column: 1 / -1; }
+  .seccion--comparativo:not(:has(.grupo ~ .grupo)) { display: block; }
+}
+
+/* ==========================================================================
+   Navegación en pantalla: cabecera, riel y hoja de secciones.
+   Lo de aquí funciona sin JavaScript. `riel.js` marca <html> con `con-js` y el
+   riel con `riel--vivo` para mejorarlo.
+   ========================================================================== */
+@media screen {
+  html { scroll-padding-top: var(--alto-cabecera); }
+
+  .cabecera {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 12px;
+    height: var(--alto-cabecera);
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    background: rgba(255, 255, 255, .97); border-bottom: 1px solid var(--linea);
+  }
+  .cabecera__marca {
+    display: flex; align-items: center; gap: 10px; min-width: 0; margin-right: auto;
+    color: var(--azul); text-decoration: none;
+  }
+  .cabecera__marca img { flex: none; width: 28px; height: auto; }
+  .cabecera__titulo { font: 700 1.15rem/1 var(--display); white-space: nowrap; }
+  .cabecera__vol { display: none; font: 600 .82rem/1 var(--texto-base); color: var(--texto-suave); white-space: nowrap; }
+  .cabecera .boton, .hoja .boton {
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+    min-height: 44px; padding: 0 16px; border: 0; font-family: inherit; cursor: pointer;
+  }
+  .cabecera__actual, .cabecera .cabecera__secciones, .cabecera__avance { display: none; }
+  .cabecera__num {
+    display: block; min-height: .75rem;
+    font: 700 .75rem/1 var(--texto-base); letter-spacing: .14em; color: var(--rojo);
+  }
+  .cabecera__nombre {
+    display: block; margin-top: 2px; font: 700 1.2rem/1.15 var(--display); color: var(--azul);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .cabecera a:focus-visible, .cabecera button:focus-visible,
+  .riel a:focus-visible, .hoja a:focus-visible, .hoja button:focus-visible {
+    outline: 3px solid var(--azul-claro); outline-offset: 2px;
+  }
+
+  /* El índice del sitio: sus bloques se separan con una línea. */
+  .indice ~ .pagina { border-top: 1px solid var(--linea); }
+
+  /* ---------- Hoja de secciones ---------- */
+  .hoja {
+    position: fixed; inset: auto 0 0 0; flex-direction: column;
+    width: 100%; max-width: 560px; max-height: 84vh; max-height: 84dvh; margin: 0 auto;
+    padding: 0 0 env(safe-area-inset-bottom); border: 0; border-radius: 18px 18px 0 0;
+    background: var(--papel); color: var(--texto); box-shadow: 0 -10px 30px rgba(0, 0, 0, .15);
+  }
+  .hoja[open] { display: flex; }
+  .hoja::backdrop { background: rgba(20, 30, 45, .42); }
+  .hoja__cabeza { display: flex; align-items: center; justify-content: space-between; padding: 14px 8px 6px 20px; }
+  .hoja__titulo { font: 700 1.3rem/1 var(--display); color: var(--azul); }
+  .hoja__cerrar {
+    width: 44px; height: 44px; border: 0; background: none;
+    font-size: 1.3rem; color: var(--texto-suave); cursor: pointer;
+  }
+  .hoja__lista { margin: 0; padding: 0 8px; list-style: none; overflow-y: auto; }
+  .hoja__lista a {
+    display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 0 12px;
+    border-radius: 10px; font: 600 1.05rem/1.2 var(--texto-base); color: var(--texto); text-decoration: none;
+  }
+  .hoja__lista a::before {
+    content: attr(data-num); flex: none; width: 26px;
+    font: 700 .85rem/1 var(--texto-base); color: var(--rojo);
+  }
+  .hoja__lista a[aria-current] { background: var(--franja); color: var(--azul); }
+  .hoja .hoja__pdf { margin: 10px 16px 18px; min-height: 52px; }
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+  .hoja[open] { animation: hoja-sube .32s cubic-bezier(.2, .7, .2, 1); }
+  .hoja[open]::backdrop { animation: hoja-fondo .25s ease-out; }
+}
+@keyframes hoja-sube { from { transform: translateY(100%); } }
+@keyframes hoja-fondo { from { opacity: 0; } }
+
+/* Bajo 1100 px no hay riel. Con el script, la cabecera muestra la sección actual. */
+@media screen and (max-width: 1099px) {
+  .riel { display: none; }
+  .con-js .cabecera__titulo, .con-js .cabecera__pdf { display: none; }
+  .con-js .cabecera__marca { margin-right: 0; }
+  .con-js .cabecera__actual { display: block; flex: 1; min-width: 0; }
+  .con-js .cabecera .cabecera__secciones { display: inline-flex; }
+  .con-js .cabecera__avance {
+    display: block; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: #e6ebf1;
+  }
+  .cabecera__avance i { display: block; width: 0; height: 100%; background: var(--rojo); }
+  /* Un navegador sin <dialog> no puede abrir la hoja: se queda con el enlace al PDF. */
+  .sin-hoja .cabecera .cabecera__secciones { display: none; }
+  .con-js.sin-hoja .cabecera__pdf { display: inline-flex; }
+}
+
+/* Al cambiar de sección, el nombre nuevo entra subiendo. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .cabecera__actual--entra { animation: cabecera-entra .35s ease-out; }
+}
+@keyframes cabecera-entra { from { opacity: 0; transform: translateY(10px); } }
+
+@media screen and (min-width: 700px) {
+  .cabecera { gap: 16px; padding-inline: 24px; }
+  .cabecera__titulo { font-size: 1.35rem; }
+  .cabecera__vol { display: inline; }
+  .cabecera .boton { padding: 0 20px; }
+}
+
+/* ---------- Computador: el riel a la derecha ---------- */
+@media screen and (min-width: 1100px) {
+  .lienzo { display: grid; grid-template-columns: minmax(0, 1fr) var(--ancho-riel); align-items: start; }
+  .riel {
+    position: sticky; top: var(--alto-cabecera);
+    height: calc(100vh - var(--alto-cabecera)); height: calc(100dvh - var(--alto-cabecera));
+    border-left: 1px solid var(--linea); background: var(--papel); overflow: hidden;
+  }
+  /* Sin el script, el riel es esta lista de enlaces. */
+  .riel__lista {
+    max-height: 100%; margin: 0; padding: 26px 46px 26px 18px;
+    list-style: none; text-align: right; overflow-y: auto;
+  }
+  .riel__lista a {
+    display: block; min-height: 32px; padding: 6px 0;
+    font: 700 1.05rem/1.25 var(--display); color: var(--azul); text-decoration: none;
+  }
+  .riel__lista a::before {
+    content: attr(data-num); margin-right: .5em;
+    font: 700 .75rem/1 var(--texto-base); letter-spacing: .1em; color: var(--rojo);
+  }
+  .riel__lista a:hover { color: var(--rojo); }
+
+  /* Con el script: las letras se dibujan en `.riel__capa` y cada una viaja por su cuenta
+     (riel.js). Los enlaces siguen ahí, sin pintar su texto, como zona de clic y de foco. */
+  .riel--vivo .riel__lista { position: absolute; inset: 0; max-height: none; padding: 0; overflow: visible; }
+  .riel--vivo .riel__lista a {
+    position: absolute; min-height: 0; padding: 0; overflow: hidden;
+    color: transparent; white-space: nowrap; user-select: none;
+  }
+  .riel--vivo .riel__lista a::before { content: none; }
+  .riel__capa { position: absolute; inset: 0; pointer-events: none; }
+  .riel__letra {
+    position: absolute; left: 0; top: 0;
+    font: 700 36px/1 var(--display); white-space: pre; color: #a3acb7; will-change: transform;
+  }
+  .riel__num, .riel__linea, .riel__regla, .riel__marca { position: absolute; pointer-events: none; }
+  .riel__num { right: 60px; height: 30px; font: 400 30px/1 var(--manuscrita); color: var(--rojo); transition: opacity .15s; }
+  .riel__linea { right: 60px; width: 40px; height: 3px; background: var(--rojo); transition: opacity .15s; }
+  /* La regla de la orilla: marcas que se corren con la página. */
+  .riel__regla {
+    top: 0; bottom: 0; right: 0; width: 22px; border-left: 1px solid #e3e8ee;
+    background-image:
+      repeating-linear-gradient(to bottom, #8f99a5 0 1px, transparent 1px 96px),
+      repeating-linear-gradient(to bottom, #d3d9e1 0 1px, transparent 1px 16px);
+    background-size: 15px 96px, 7px 16px; background-repeat: repeat-y; background-position: right 0, right 0;
+  }
+  .riel__marca { right: 0; width: 44px; height: 2px; background: var(--rojo); }
+  .riel__marca b { position: absolute; right: 3px; top: 5px; font: 700 .75rem/1 var(--texto-base); color: var(--rojo); }
 }
 
 @page { size: A4; margin: 14mm 14mm 18mm; }

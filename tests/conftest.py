@@ -1,10 +1,17 @@
 """Datos de prueba compartidos por las pruebas del boletín semestral."""
 
+import os
+import shutil
 import tomllib
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from PIL import Image
+from playwright.sync_api import Browser, Error, sync_playwright
+
+from boletin_semestral.modelo import Edicion
+from boletin_semestral.render import Modo, copiar_estaticos, renderizar
 
 EDICION_COMPLETA = """\
 volumen = 8
@@ -127,3 +134,34 @@ def leer_datos(carpeta: Path) -> dict:
     """El TOML de una edición como diccionario, para modificarlo en las pruebas."""
     with (carpeta / "edicion.toml").open("rb") as f:
         return tomllib.load(f)
+
+
+def escribir_edicion(
+    edicion: Edicion, carpeta_edicion: Path, destino: Path, modo: Modo = Modo.FINAL
+) -> Path:
+    """Deja en `destino` la web de la edición (HTML, estáticos y fotos) y devuelve su HTML."""
+    destino.mkdir(parents=True)
+    (destino / "index.html").write_text(renderizar(edicion, modo), encoding="utf-8")
+    copiar_estaticos(destino)
+    shutil.copytree(carpeta_edicion / "fotos", destino / "fotos")
+    return destino / "index.html"
+
+
+@pytest.fixture(scope="module")
+def navegador() -> Iterator[Browser]:
+    """Chromium para las pruebas de navegador; sin él, se saltan.
+
+    `BOLETIN_CHROMIUM` apunta a otro ejecutable, por si el de Playwright no está instalado.
+    Es de módulo y no de sesión: Playwright no admite dos `sync_playwright()` a la vez, y las
+    pruebas de PDF abren el suyo.
+    """
+    ejecutable = os.environ.get("BOLETIN_CHROMIUM")
+    with sync_playwright() as p:
+        try:
+            navegador = p.chromium.launch(executable_path=ejecutable)
+        except Error:
+            if ejecutable:
+                raise
+            pytest.skip("Chromium no disponible (BOLETIN_CHROMIUM o playwright install)")
+        yield navegador
+        navegador.close()

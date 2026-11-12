@@ -247,6 +247,10 @@ para que Mónica lo vea. El programa nunca inventa un dato para llenar un hueco.
 Si el programa avisa `Secciones de más de una página: ...`, esa sección no cabe en una hoja. Se puede
 dejar así, porque sigue en la página siguiente, o acortar el texto.
 
+La página web lleva además un índice de secciones y un botón «Descargar PDF». Salen solos, con
+la `etiqueta` de cada sección: no hay que llenar nada más. Conviene abrir la vista previa en el
+computador y en el celular antes de mandarla a aprobación.
+
 #### Paso 5: la aprobación
 
 Manda a Mónica Vásquez el PDF de la vista previa (`boletin-vol-8-borrador.pdf`). Si pide cambios,

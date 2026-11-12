@@ -1,3 +1,4 @@
+{% from "_partes.html.j2" import lista %}
 <!doctype html>
 <html lang="es">
 <head>
@@ -13,11 +14,15 @@
 {% if borrador %}
 <div class="marca-borrador" aria-hidden="true">BORRADOR</div>
 {% endif %}
+{% with volumen = "Vol. " ~ e.volumen ~ " · " ~ e.fecha %}
+{% include "_cabecera.html.j2" %}
+{% endwith %}
+<div class="lienzo">
 <main class="boletin">
 {% include "_portada.html.j2" %}
 {% include "_editorial.html.j2" %}
 {% for s in secciones %}
-<section class="pagina seccion seccion--{{ s.seccion.tipo }}" data-titulo="{{ s.seccion.titulo | replace('*', '') }}">
+<section id="{{ s.id }}" class="pagina seccion seccion--{{ s.seccion.tipo }}{% if s.invertida %} seccion--invertida{% endif %}" data-titulo="{{ s.seccion.titulo | replace('*', '') }}">
   <header class="encabezado">
     <p class="antetitulo">{{ s.antetitulo }}</p>
     <h2 class="titulo">{{ s.seccion.titulo | manuscrita }}</h2>
@@ -31,6 +36,19 @@
 {% endfor %}
 {% include "_contraportada.html.j2" %}
 </main>
+<nav class="riel solo-pantalla" aria-label="Secciones del boletín">
+{{ lista(partes, "riel__lista") }}
+</nav>
+</div>
+<dialog class="hoja solo-pantalla" aria-label="Secciones">
+  <div class="hoja__cabeza">
+    <h2 class="hoja__titulo">Secciones</h2>
+    <button class="hoja__cerrar" type="button" aria-label="Cerrar">✕</button>
+  </div>
+{{ lista(partes, "hoja__lista") }}
+  <a class="boton hoja__pdf" href="{{ pdf }}" download>Descargar PDF</a>
+</dialog>
 <script src="movimiento.js" defer></script>
+<script src="riel.js" defer></script>
 </body>
 </html>
